@@ -18,6 +18,40 @@ function main(){
     //LIMPIAMOS EN COLOR EN EL BUFFER CON EL COLOR ESPECIFICADO, EN ESTE CASO NEGRO
     gl.clear(gl.COLOR_BUFFER_BIT);
 
+    //DECLARANDO EL VERTEX SHADER
+    const vsSource = `
+        attribute vec4 aVertexPosition;
+
+        uniform mat4 uModelViewMatrix;
+        uniform mat4 uProjectionMatrix;
+
+        void main(){
+            gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+        }
+    `;
+
+    //DECLARANDO EL FRAGMENT SHADER
+    const fsSource = `
+        void main(){
+            gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+        }
+    `
+
+    //CREANDO LA INSTANCIA DEL PROGRAMA SHADER
+    const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
+
+    //INDICANDO LAS DIRECCIONES QUE WEBGL DEBERA ASIGNAR A NUESTRAS ENTRADAS
+    const programInfo = {
+        program: shaderProgram,
+        attribLocations: {
+            vertexPosition: gl.getAttriblocation(shaderProgram, 'aVertexPosition'),
+        },
+        uniformLocations: {
+            projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
+            modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
+        },
+    }
+
 }
 //ESTA FUNCION INICIALIZA NUESTROS SHADERS PARA QUE WEBGL SEPA COMO DIBUJAR NUESTROS DATOS
 function initShaderProgram(gl, vsSource, fsSource){
