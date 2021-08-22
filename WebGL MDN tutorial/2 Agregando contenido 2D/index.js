@@ -93,4 +93,31 @@ function loadShader( gl, type, source ){
     return shader;
 }
 
+//ESTA FUNCION SE ENCARGA DE CREAR BUFFERS QUE CONTENGAN LA POSICION DE LOS VERTICES
+function initBuffers(gl){
+
+    //CREANDO BUFFER PARA LAS POSICIONES EN UN PLANO CUADRADO
+    const positionBuffer = gl.createBuffer();
+
+    //INDICAMOS QUE QUEREMOS UTILIZAR EL positionBuffer PARA REALIZAR OPERACIONES DE BUS DE DATOS
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+    //LUEGO CREAMOS UN ARRAY DE POSICIONES PARA EL CUADRADO
+    const position = [
+        -1.0,   1.0,
+        1.0,    1.0,
+        -1.0,   -1.0,
+        1.0,    -1.0,
+    ];
+
+    //DESPUES PASAMOS LA LISTA DE POSICIONES HACIA WEBGL PARA CONSTRUIR LA FORMA.
+    gl.bufferData(gl.ARRAY_BUFFER,
+                new Float32Array(position),
+                gl.STATIC_DRAW);
+
+    return {
+        position: positionBuffer,
+    };
+}
+
 window.onload = main
