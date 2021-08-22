@@ -7,16 +7,16 @@ function main(){
     const gl = canvas.getContext("webgl");
 
     //COMRPOBANDO QUE WEBGL TRABAJA CORRECTAMENTE
-    if(gl === null){
+    if(!gl){
         alert( "No se pudo inicializar WEBGL, comprueba que tu navegador o pc lo soporten" )
         return;
     }
 
     //ASIGNAMOS UN LIMPIADO DE PANTALLA EN NEGRO SIN OPACIDAD
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    //gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
     //LIMPIAMOS EN COLOR EN EL BUFFER CON EL COLOR ESPECIFICADO, EN ESTE CASO NEGRO
-    gl.clear(gl.COLOR_BUFFER_BIT);
+    //gl.clear(gl.COLOR_BUFFER_BIT);
 
     //DECLARANDO EL VERTEX SHADER
     const vsSource = `
@@ -35,7 +35,7 @@ function main(){
         void main(){
             gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
         }
-    `
+    `;
 
     //CREANDO LA INSTANCIA DEL PROGRAMA SHADER
     const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
@@ -44,19 +44,24 @@ function main(){
     const programInfo = {
         program: shaderProgram,
         attribLocations: {
-            vertexPosition: gl.getAttriblocation(shaderProgram, 'aVertexPosition'),
+            vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
         },
         uniformLocations: {
             projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
             modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
         },
-    }
+    };
 
+    const buffers = initBuffers(gl);
+
+    drawScene(gl, programInfo, buffers);
 }
+
+
 //ESTA FUNCION INICIALIZA NUESTROS SHADERS PARA QUE WEBGL SEPA COMO DIBUJAR NUESTROS DATOS
 function initShaderProgram(gl, vsSource, fsSource){
     const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
-    const fragmentShader = loadShader(gl, gl.FREGMENT_SHADER, fsSource);
+    const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
 
     //CREANDO EL PROGRAMA SHADER
     const shaderProgram = gl.createProgram();
@@ -73,6 +78,7 @@ function initShaderProgram(gl, vsSource, fsSource){
     return shaderProgram;
 }
 
+
 //ESTA FUNCIOM CREA UN SHADER DADO UN TIPO, CARGA EL ARCHIVO FUENTE Y LO COMPILA
 function loadShader( gl, type, source ){
     const shader = gl.createShader(type);
@@ -84,7 +90,7 @@ function loadShader( gl, type, source ){
     gl.compileShader(shader);
 
     //VERIFICANDO QUE EL PROGRAMA SE HAYA COMPILADO EXITOSAMENTE
-    if (!getShaderParameter(shader, gl.COMPILE_STATUS)){
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)){
         alert(`Ah ocurrido un error al tratar de compilar el shader ${gl.getShaderInfoLog(shader)}`);
         gl.deleteShader(shader);
         return null;
@@ -92,6 +98,7 @@ function loadShader( gl, type, source ){
 
     return shader;
 }
+
 
 //ESTA FUNCION SE ENCARGA DE CREAR BUFFERS QUE CONTENGAN LA POSICION DE LOS VERTICES
 function initBuffers(gl){
@@ -103,21 +110,99 @@ function initBuffers(gl){
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
     //LUEGO CREAMOS UN ARRAY DE POSICIONES PARA EL CUADRADO
-    const position = [
-        -1.0,   1.0,
-        1.0,    1.0,
-        -1.0,   -1.0,
-        1.0,    -1.0,
+    const positions = [
+        1.0,   1.0,
+        -1.0,    1.0,
+        1.0,   -1.0,
+        -1.0,    -1.0,
     ];
 
     //DESPUES PASAMOS LA LISTA DE POSICIONES HACIA WEBGL PARA CONSTRUIR LA FORMA.
     gl.bufferData(gl.ARRAY_BUFFER,
-                new Float32Array(position),
+                new Float32Array(positions),
                 gl.STATIC_DRAW);
 
     return {
         position: positionBuffer,
     };
+}
+
+
+//ESTA FUNCION SE ENCARGA DE RENDERIZAR LA ESCENA
+function drawScene(gl, programInfo, buffers){
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clearDepth(1.0);
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LEQUAL);
+
+    //LIMPIAMOS EL IENZO ANTES DE COMENZAR A DIBUJAR EN EL
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    //CREAMOS UNA MATRIX DE PERSPECTIVA, UNA MATRIX ESPECIAL QUE ES UTILIZADA PARA SIMULAR
+    // LA DISTORSION DE PERSPECTIVA EN UNA CAMARA.
+    const fieldOfView = 45 * Math.PI / 180; //EN RADIANES
+    const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+    const zNear = 0.1;
+    const zFar = 100.0;
+    const projectionMatrix = mat4.create(); 
+
+    mat4.perspective(
+        projectionMatrix,
+        fieldOfView,
+        aspect,
+        zNear,
+        zFar
+    );
+
+    const modelViewMatrix = mat4.create();
+
+    mat4.translate(
+        modelViewMatrix,
+        modelViewMatrix,
+        [-0.0, 0.0, -6.0]
+    );
+
+    //LE INDICAMOS A WEBGL COMO OBTENER LAS POSICIONES DEL BUS DE DATOS DE POSICIONES 
+    //HACIA EL ATRIBUTO DE VERTICES DE POSICIONES
+    {
+        const numComponents = 2;
+        const type = gl.FLOAT;
+        const normalize = false;
+        const stride = 0;
+        const offset = 0;
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position);
+        gl.vertexAttribPointer(
+            programInfo.attribLocations.vertexPosition,
+            numComponents,
+            type,
+            normalize,
+            stride,
+            offset);
+        gl.enableVertexAttribArray(
+            programInfo.attribLocations.vertexPosition
+        );
+    }
+
+    //LE INDICAMOS A WEBGL QUE UTILICE NUESTRO PROGRAMA CUANDO DIBUJE
+    gl.useProgram(programInfo.program);
+
+    gl.uniformMatrix4fv(
+        programInfo.uniformLocations.projectionMatrix,
+        false,
+        projectionMatrix
+    );
+
+    gl.uniformMatrix4fv(
+        programInfo.uniformLocations.modelViewMatrix,
+        false,
+        modelViewMatrix
+    );
+
+    {
+        const offset = 0;
+        const vertexCount = 4;
+        gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
+    }
 }
 
 window.onload = main
