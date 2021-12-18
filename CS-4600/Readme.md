@@ -1,32 +1,3 @@
-<style>
-table {
-  font-family: arial, sans-serif;
-  border-collapse: collapse;
-  width: 100%;
-}
-
-td, th {
-  border: 1px solid #dddddd;
-  text-align: left;
-  padding: 8px;
-}
-
-.td-black{
-    color: black;
-}
-
-tr:nth-child(even) {
-  background-color: #dddddd;
-}
-
-.td-project{
-    color:crimson;
-}
-
-.td2-project{
-    color:pink;
-}
-</style>
 CS4600 Introduction to Computer Graphics
 ----
 ----
@@ -41,7 +12,7 @@ CS4600 Introduction to Computer Graphics
 <a href="https://www.youtube.com/watch?v=vLSphLtKQ0o&list=PLplnkTzzqsZTfYh4UbhLGpI5kGd5oW_Hh">(Link to Playlist)</a>
 </li>
 <li>
-<b>The University of UTAH</b> for upload resources and information about the course.<br><a href="https://www.youtube.com/watch?v=vLSphLtKQ0o&list=PLplnkTzzqsZTfYh4UbhLGpI5kGd5oW_Hh">(Link to Course Information)</a>
+<b>The University of UTAH</b> for upload resources and information about the course.<br><a href="https://graphics.cs.utah.edu/courses/cs4600/fall2020/">(Link to Course Information)</a>
 </li>
 </ul>
 <br>
